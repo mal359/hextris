@@ -105,6 +105,7 @@ char **argv;
     } else
       log_name = pwent->pw_name;
 #endif
+    init_scoreboard();
     for (i = 1; i < argc; i++) {
 	if (! strcmp(argv[i],"-rv")) {
 	    inverse = 1;
@@ -153,7 +154,7 @@ char **argv;
 	    if (newintvl <= 0)
 	      break;
 	    tp.tv_sec = 0;
-	    tp.tv_usec = newintvl;
+	    tp.tv_usec = (long) newintvl;
 	    FD_ZERO(&fdst);
 	    FD_SET(ConnectionNumber(display),&fdst);
 	    select(ConnectionNumber(display)+1,&fdst,0,0,&tp);

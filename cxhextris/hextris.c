@@ -490,8 +490,8 @@ high_score_t high_scores[MAXHIGHSCORES];
 		high_scores[j].score = high_scores[j-1].score;
 		high_scores[j].rows = high_scores[j-1].rows;
 	    }
-	    strcpy(high_scores[i].name, name);
-	    strcpy(high_scores[i].userid, userid);
+	    strncpy(high_scores[i].name, name, sizeof(high_scores[i].name));
+	    strncpy(high_scores[i].userid, userid, sizeof(high_scores[i].userid));
 	    high_scores[i].score = score;
 	    high_scores[i].rows = rows;
 	    added = 1;

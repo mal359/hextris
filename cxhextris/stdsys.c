@@ -89,6 +89,47 @@ piece_t *npiece,*piece;
     npiece->column = MAXCOLUMN / 2;
 }
 
+
+/*
+ *	Added by Alan Cox , RedHat May 1997
+ *
+ *	Xhextris isnt the cleanest of code, its also using a ton of toolkits. I've
+ *	swatted the bug reported by Chris Evans but I don't believe that this is the
+ *	right approach.
+ *
+ *	So we do it this way.
+ *
+ *	main calls init_scoreboard(). init_scoreboard drops all setuid/setgidness
+ *	_after_ opening up the scoreboard.
+ */
+ 
+static FILE *scores=NULL;
+
+void init_scoreboard(void)
+{
+	scores=fopen(HIGHSCOREFILE, "r+");
+	/* Drop em.. */
+	if(setregid(getgid(),getgid())==-1 ||
+		setreuid(getuid(),getuid())==-1)
+	{
+		perror("drop privileges");
+		exit(1);
+	}
+}
+
+static FILE *get_score_file(void)
+{
+	if(!scores)
+		return NULL;
+	rewind(scores);
+	return scores;
+}
+
+static void put_score_file(void)
+{
+	fflush(scores);
+}
+
 /* This reads in the high score file.
  */
 read_high_scores(high_scores)
@@ -96,12 +137,9 @@ high_score_t high_scores[MAXHIGHSCORES];
 {
     int i, j;
     FILE *high_score_file;
-    char high_score_file_name[512];
     char buffer[40];
 
-    strcpy(high_score_file_name,HIGHSCOREFILE);
-    
-    if ((high_score_file = fopen(high_score_file_name , "r")) == NULL) {
+    if ((high_score_file = get_score_file()) == NULL) {
 	fprintf(stderr,"xhextris: Can't open high score file.\n");
 	return 0;
     }
@@ -124,7 +162,7 @@ high_score_t high_scores[MAXHIGHSCORES];
 	high_scores[j].score = 0;
 	high_scores[j].rows = 0;
     }
-    fclose(high_score_file);
+    put_score_file();
     return 1;
 }
 
@@ -139,12 +177,10 @@ char *uniqueid;
     char high_score_file_name[512];
     char buffer[40];
     
-    strcpy(high_score_file_name,HIGHSCOREFILE);
-    
 #ifdef AFS
     beGames();
 #endif
-    if ((high_score_file = fopen(high_score_file_name, "w")) == NULL) {
+    if ((high_score_file = get_score_file()) == NULL) {
 	fprintf(stderr,"xhextris: Can't open high score file.\n");
 	return 0;
     }
@@ -159,7 +195,7 @@ char *uniqueid;
 	fwrite(buffer,sizeof(char),40,high_score_file);
     }
     fflush(high_score_file);
-    fclose(high_score_file);
+    put_score_file();
 /*    rename(tmp_high_score_file_name,high_score_file_name);*/
 #ifdef AFS
     bePlayer();

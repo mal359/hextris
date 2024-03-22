@@ -1,4 +1,4 @@
-       ScoreDir = $(LIBDIR)
+       ScoreDir = /var/lib/games
       ScoreFile = xhextris-scores
         DEFINES = -DHIGHSCOREFILE=\"$(ScoreDir)/$(ScoreFile)\" -DHEXFONTDIR=\"$(FONTDIR)/misc\"
         HEADERS = header.h
