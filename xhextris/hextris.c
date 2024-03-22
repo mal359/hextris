@@ -28,11 +28,13 @@
  * functions in this file that call functions in the I/O handler.
  */
 
+#define SHAPE_REQUIRED
 #include "header.h"
 
 /* This places the piece on the board in its starting position. All the
  * hexes in the piece are displayed.
  */
+void
 init_piece(piece)
 piece_t *piece;
 {
@@ -51,6 +53,7 @@ piece_t *piece;
  * any hexes that will be covered. In this way, any piece that is already
  * covered, and will be covered, is not redrawn.
  */
+void
 place_piece(piece,tpiece)
 piece_t *piece, *tpiece;
 {
@@ -96,6 +99,7 @@ piece_t *piece, *tpiece;
 /* This checks to see if the proposed position of the piece (tpiece) will
  * legally fit in the grid.
  */
+int
 check_piece(tpiece,grid)
 piece_t *tpiece;
 position_t grid[MAXROW][MAXCOLUMN];
@@ -130,6 +134,7 @@ position_t grid[MAXROW][MAXCOLUMN];
 
 /* This drops the piece into the grid, in its final resting place.
  */
+void
 drop_piece(piece,grid)
 piece_t *piece;
 position_t grid[MAXROW][MAXCOLUMN];
@@ -148,6 +153,7 @@ position_t grid[MAXROW][MAXCOLUMN];
 
 /* This redraws the entire grid.
  */
+void
 redraw_grid(grid)
 position_t grid[MAXROW][MAXCOLUMN];
 {
@@ -162,6 +168,7 @@ position_t grid[MAXROW][MAXCOLUMN];
 /* This clears the current, normal row, and moves the rest of the
  * grid down.
  */
+void
 shift_redraw_grid(start_row,grid)
 int start_row;
 position_t grid[MAXROW][MAXCOLUMN];
@@ -190,6 +197,7 @@ position_t grid[MAXROW][MAXCOLUMN];
 /* This clears the current, offset row, and moves the rest of the
  * grid down.
  */
+void
 shift_offset_redraw_grid(start_row,grid)
 int start_row;
 position_t grid[MAXROW][MAXCOLUMN];
@@ -222,6 +230,7 @@ position_t grid[MAXROW][MAXCOLUMN];
 
 /* This checks for any cleared rows, be they normal or offset.
  */
+int
 check_rows(grid)
 position_t grid[MAXROW][MAXCOLUMN];
 {
@@ -265,6 +274,7 @@ position_t grid[MAXROW][MAXCOLUMN];
  * 4 - Drop
  * 6 - Quit
  */
+int
 update(choice,grid,npiece,piece,score,rows)
 int choice;
 position_t grid[MAXROW][MAXCOLUMN];
@@ -349,6 +359,7 @@ int *score, *rows;
 /* This process the normal dropping caused by the passage of time. The io
  * handler calls this, when it is time to drop the piece.
  */
+int
 update_drop(grid,npiece,piece,score,rows)
 position_t grid[MAXROW][MAXCOLUMN];
 piece_t *npiece,*piece;
@@ -385,6 +396,7 @@ int *score, *rows;
 
 /* This sets up things for a new game.
  */
+void
 new_game(grid,npiece,piece,score,rows)
 position_t grid[MAXROW][MAXCOLUMN];
 piece_t *npiece,*piece;
@@ -406,6 +418,7 @@ int *score, *rows;
 
 /* This draws the borders of the game.
  */
+void
 draw_borders()
 {
     int i;
@@ -424,6 +437,7 @@ draw_borders()
  * one of his own, the lowest of hist scores is removed, and the new one
  * is placed.
  */
+int
 is_high_score(name,userid,score,rows,high_scores)
 char name[MAXNAMELENGTH];
 char userid[MAXUSERIDLENGTH];
@@ -477,14 +491,15 @@ high_score_t high_scores[MAXHIGHSCORES];
  * key stroke into a choice. Notice: It also transfers the variable the
  * I/O handler supplies it.
  */
+void
 do_choice(choice,grid,npiece,piece,score,rows,game_over,game_view,high_scores)
-char choice;
+char *choice;
 position_t grid[MAXROW][MAXCOLUMN];
 piece_t *npiece,*piece;
 int *score, *rows, *game_over, *game_view;
 high_score_t high_scores[MAXHIGHSCORES];
 {
-    switch (choice) {
+    switch (choice[0]) {
     case 'j': case 'J': case '4':
 	if (! *game_over)
 	  update(0,grid,npiece,piece,score,rows);
@@ -493,7 +508,7 @@ high_score_t high_scores[MAXHIGHSCORES];
 	if (! *game_over)
 	  update(1,grid,npiece,piece,score,rows);
 	break;
-    case 'k': case 'K': case '5':
+    case 'k': case 'K': case '5': case '2':
 	if (! *game_over)
 	  update(2,grid,npiece,piece,score,rows);
 	break;
@@ -549,11 +564,30 @@ high_score_t high_scores[MAXHIGHSCORES];
 #ifdef LOG
 	loguse(LOGHOST,"xhexlog",log_message);
 #endif
+      case '\027':
+	if (strcmp(choice, "\027OA") == 0) {
+	  if (! *game_over)
+	    update(3,grid,npiece,piece,score,rows);
+	}
+	else if (strcmp(choice, "\027OB") == 0) {
+	  if (! *game_over)
+	    update(0,grid,npiece,piece,score,rows);
+	}
+	else if (strcmp(choice, "\027OC") == 0) {
+	  if (! *game_over)
+	    update(1,grid,npiece,piece,score,rows);
+	}
+	else if (strcmp(choice, "\027OD") == 0) {
+	  if (! *game_over)
+	    update(2,grid,npiece,piece,score,rows);
+	}
+	break;
     }
 }
 
 /* This redraws all the parts of the game through the I/O handler.
  */
+void
 redraw_game(grid,npiece,piece,score,rows,game_view,high_scores)
 position_t grid[MAXROW][MAXCOLUMN];
 piece_t *npiece,*piece;

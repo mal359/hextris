@@ -138,9 +138,11 @@ hexfont=wm_DefineFont("/afs/andrew.cmu.edu/usr0/games/fonts/wm/hex10.fwm");
 	    tp.tv_usec = newintvl;
 	    FD_ZERO(&fdst);
 	    FD_SET(fileno(winin),&fdst);
-	    if(select(fileno(winin)+1,&fdst,0,0,&tp))
-	      do_choice(getc(winin),grid,&npiece,&piece,&score,&rows,
+	    if(select(fileno(winin)+1,&fdst,0,0,&tp)) {
+	      char tmp[1] = getc(winin);
+	      do_choice(tmp,grid,&npiece,&piece,&score,&rows,
 			&game_over,&game_view,high_scores);
+	    }
 
 	}
     }

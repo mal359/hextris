@@ -28,6 +28,7 @@
 #include <strings.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/keysym.h>
 #include <sys/types.h>
 #include <sys/dir.h>
 #include <sys/time.h>
@@ -38,6 +39,10 @@
 #endif
 
 #include "header.h"
+
+extern void set_up_window(int*, int*, XSizeHints*, char *[], int);
+extern void get_GC(Window, GC*, XFontStruct*);
+extern void load_font(XFontStruct**, char *);
 
 /* Macros to make 4.2 BSD select compatible with 4.3 BSD select */
 #ifndef FD_SET
@@ -65,7 +70,7 @@ extern int PlayerUID;
 
 /* This is the big, ugly main X procedure...
  */
-void main(argc, argv)
+int main(argc, argv)
 int argc;
 char **argv;
 {
@@ -188,7 +193,23 @@ char **argv;
 		    XBell(display,50);
 		    break;
 		case KeyPress:
-		    XLookupString(&report, buffer, bufsize, &key, &compose);
+		    XLookupString(&(report.xkey), buffer, bufsize, &key, &compose);
+		    switch (key) {
+			case XK_Left:
+			    buffer[0] = '4';
+			    break;
+			case XK_Up:
+			    buffer[0] = '8';
+			    break;
+			case XK_Right:
+			    buffer[0] = '6';
+			    break;
+			case XK_Down:
+			    buffer[0] = '2';
+			    break;
+			default:
+			    break;
+		    }
 		    oldscore = score;
 		    do_choice(buffer,grid,&npiece,&piece,&score,&rows,
 			      &game_over, &game_view, high_scores);
@@ -204,16 +225,16 @@ char **argv;
 	    }
 	}
     }
+    return 0;
 }
 
 /* This sets up the basic connections to the X server, the fonts, and
  * which colors are to be foreground and background.
  */
+void
 set_up_display(inverse)
 int inverse;
 {
-    Pixmap temp;
-
     if ( (display = XOpenDisplay(NULL)) == NULL) {
 	    fprintf(stderr, "xhextris: cannot connect to X server.\n");
 	    exit(-1);
@@ -283,18 +304,25 @@ int inverse;
 /* This sets up the font path to contain the directories that have the
  * fonts this program needs.
  */
+void
 set_font_path(fontdir)
 char *fontdir;
 {
     int i, font_length;
     char **font_path = XGetFontPath(display, &font_length);
 
-    for (i = 0; (i < font_length) && strcmp(font_path[i],fontdir); i++);
+    for (i = 0; (i < font_length); i++) {
+	char *colon = strrchr(font_path[i], ':');
+	if (colon)
+	    *colon = '\0';
+	if (strcmp(font_path[i],fontdir) == 0)
+	    break;
+    }
 
     if (i >= font_length) {
 	char **new_font_path;
 
-	if (new_font_path = (char **) malloc((font_length+1)*sizeof(char *))) {
+	if ((new_font_path = (char **) malloc((font_length+1)*sizeof(char *)))) {
 	    for(i = 0; i < font_length; i++)
 	      new_font_path[i] = font_path[i];
 	    new_font_path[i] = fontdir;
@@ -308,6 +336,7 @@ char *fontdir;
 
 /* This sets up the window position, size, fonts, and gcs.
  */
+void
 set_up_window(width,height,size_hints,argv,argc)
 int *width, *height;
 XSizeHints *size_hints;
@@ -343,6 +372,7 @@ int argc;
 
 /* This sets up a gc
  */
+void
 get_GC(win, tgc, tfont_info)
 Window win;
 GC *tgc;
@@ -368,6 +398,7 @@ XFontStruct *tfont_info;
 
 /* This loads a font
  */
+void
 load_font(tfont_info, font_name)
 XFontStruct **tfont_info;
 char *font_name;
@@ -380,6 +411,7 @@ char *font_name;
 
 /* This yells if the window is too small.
  */
+void
 TooSmall()
 {
     char *string1 = "Too Small";
@@ -395,6 +427,7 @@ TooSmall()
  *
  * This clears the window.
  */
+void
 clear_display()
 {
     XClearWindow(display,win);
@@ -404,6 +437,7 @@ clear_display()
  *
  * This displays the current score and rows completed.
  */
+void
 display_scores(score,rows)
 int *score, *rows;
 {
@@ -426,6 +460,7 @@ int *score, *rows;
  *
  * This displays the help information.
  */
+void
 display_help()
 {
     int y_offset, x_offset, i;
@@ -459,6 +494,7 @@ display_help()
     XFlush(display);
 }
 
+void
 display_help_score()
 {
     int y_offset, x_offset, i;
@@ -480,13 +516,14 @@ display_help_score()
  *
  * This displays the high score list.
  */
+void
 display_high_scores(high_scores)
 high_score_t high_scores[MAXHIGHSCORES];
 {
     int y_offset, i;
     static int x_offset[5] = {5,30,150,200,300};
     static char *header[] = {"#","Name","UID","Score","Rows"};
-    char message[40];
+    char message[40] = "";
 
     XClearWindow(display,win);
     XSetFillStyle(display, gc, FillSolid);
@@ -518,6 +555,7 @@ high_score_t high_scores[MAXHIGHSCORES];
  *
  * This displays the next piece to be dropped.
  */
+void
 show_next_piece(npiece)
 piece_t *npiece;
 {
@@ -536,6 +574,7 @@ piece_t *npiece;
  *
  * This draws one hex at the specified row and column specified.
  */
+void
 draw_hex(row,column,fill,type)
 int row,column,fill,type;
 {
@@ -601,6 +640,7 @@ int row,column,fill,type;
     XFlush(display);
 }
 
+void
 draw_pos(column,fill,type)
 int column,fill,type;
 {
@@ -670,6 +710,7 @@ int column,fill,type;
  *
  * This ends the game by closing everything down and exiting.
  */
+void
 end_game()
 {
 	XFreeGC (display, gc);

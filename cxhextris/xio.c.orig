@@ -28,7 +28,6 @@
 #include <strings.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include <X11/keysym.h>
 #include <sys/types.h>
 #include <sys/dir.h>
 #include <sys/time.h>
@@ -39,10 +38,6 @@
 #endif
 
 #include "header.h"
-
-extern void set_up_window(int*, int*, XSizeHints*, char *[], int);
-extern void get_GC(Window, GC*, XFontStruct*);
-extern void load_font(XFontStruct**, char *);
 
 /* Macros to make 4.2 BSD select compatible with 4.3 BSD select */
 #ifndef FD_SET
@@ -60,17 +55,21 @@ Window win;
 GC gc, hexgc;
 XFontStruct *font_info, *hexfont_info;
 Pixmap black, white;
+XColor Orange1, Red1, Blue1, Green1, Yellow1, Chocolate1, Purple1, 
+  SteelBlue1, Black, White, Plum1, Maroon1, Pink1, Wheat;
+XColor Orange4, Red4, Blue4, Green4, Yellow4, Chocolate4, Purple4, SteelBlue4,
+  Plum4, Maroon4, Pink4, DarkSlateGrey;
 #ifdef AFS
 extern int PlayerUID;
 #endif
 
 /* This is the big, ugly main X procedure...
  */
-int main(argc, argv)
+void main(argc, argv)
 int argc;
 char **argv;
 {
-    char buffer[20];
+    char buffer[512];
     int width, height, i, bufsize=20, inverse=0, pleasure=0, window_size = 0;
     XSizeHints size_hints;
     XEvent report;
@@ -83,6 +82,7 @@ char **argv;
     struct passwd  *pwent;
 /* The following variables are required by hextris */
     int score = 0, rows = 0, game_over = 1, game_view = 1, oldscore = 0;
+
     high_score_t high_scores[MAXHIGHSCORES];
     position_t grid[MAXROW][MAXCOLUMN];
     piece_t npiece, piece;
@@ -105,6 +105,7 @@ char **argv;
     } else
       log_name = pwent->pw_name;
 #endif
+    init_scoreboard();
     for (i = 1; i < argc; i++) {
 	if (! strcmp(argv[i],"-rv")) {
 	    inverse = 1;
@@ -153,7 +154,7 @@ char **argv;
 	    if (newintvl <= 0)
 	      break;
 	    tp.tv_sec = 0;
-	    tp.tv_usec = newintvl;
+	    tp.tv_usec = (long) newintvl;
 	    FD_ZERO(&fdst);
 	    FD_SET(ConnectionNumber(display),&fdst);
 	    select(ConnectionNumber(display)+1,&fdst,0,0,&tp);
@@ -187,23 +188,7 @@ char **argv;
 		    XBell(display,50);
 		    break;
 		case KeyPress:
-		    XLookupString(&(report.xkey), buffer, bufsize, &key, &compose);
-		    switch (key) {
-			case XK_Left:
-			    buffer[0] = '4';
-			    break;
-			case XK_Up:
-			    buffer[0] = '8';
-			    break;
-			case XK_Right:
-			    buffer[0] = '6';
-			    break;
-			case XK_Down:
-			    buffer[0] = '2';
-			    break;
-			default:
-			    break;
-		    }
+		    XLookupString(&report, buffer, bufsize, &key, &compose);
 		    oldscore = score;
 		    do_choice(buffer,grid,&npiece,&piece,&score,&rows,
 			      &game_over, &game_view, high_scores);
@@ -219,14 +204,11 @@ char **argv;
 	    }
 	}
     }
-
-    return 0;
 }
 
 /* This sets up the basic connections to the X server, the fonts, and
  * which colors are to be foreground and background.
  */
-void
 set_up_display(inverse)
 int inverse;
 {
@@ -237,39 +219,82 @@ int inverse;
 	    exit(-1);
 	}
     screen = DefaultScreen(display);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "red4", &Red4, &Red4);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "green4", &Green4, &Green4);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "black", &Black, &Black);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "white", &White, &White);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "Orange4", &Orange4, &Orange4);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "blue4", &Blue4, &Blue4);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "yellow4", &Yellow4, &Yellow4);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "chocolate4", &Chocolate4, &Chocolate4);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "purple4", &Purple4, &Purple4);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "SteelBlue4", &SteelBlue4, &SteelBlue4);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "Plum4", &Plum4, &Plum4);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "Maroon4", &Maroon4, &Maroon4);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "pink4", &Pink4, &Pink4);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "Wheat", &Wheat, &Wheat);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "darkslategrey", &DarkSlateGrey, &DarkSlateGrey);
+
+
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "red1", &Red1, &Red1);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "green1", &Green1, &Green1);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "Orange1", &Orange1, &Orange1);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "blue1", &Blue1, &Blue1);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "yellow1", &Yellow1, &Yellow1);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "chocolate1", &Chocolate1, &Chocolate1);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "purple1", &Purple1, &Purple1);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "SteelBlue1", &SteelBlue1, &SteelBlue1);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "Plum1", &Plum1, &Plum1);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "Maroon1", &Maroon1, &Maroon1);
+    XAllocNamedColor(display, DefaultColormap(display, screen),
+		     "pink1", &Pink1, &Pink1);
     black = BlackPixel(display, screen);
     white = WhitePixel(display, screen);
-    if (inverse) {
-	temp = black;
-	black = white;
-	white = temp;
-    }
+
     set_font_path(HEXFONTDIR);
-/*    set_font_path(FONTDIR); */
+
 }
 
 /* This sets up the font path to contain the directories that have the
  * fonts this program needs.
  */
-void
 set_font_path(fontdir)
 char *fontdir;
 {
     int i, font_length;
     char **font_path = XGetFontPath(display, &font_length);
 
-    for (i = 0; (i < font_length); i++) {
-	char *colon = strrchr(font_path[i], ':');
-	if (colon)
-	    *colon = '\0';
-	if (strcmp(font_path[i],fontdir) == 0)
-	    break;
-    }
+    for (i = 0; (i < font_length) && strcmp(font_path[i],fontdir); i++);
 
     if (i >= font_length) {
 	char **new_font_path;
 
-	if ((new_font_path = (char **) malloc((font_length+1)*sizeof(char *)))) {
+	if (new_font_path = (char **) malloc((font_length+1)*sizeof(char *))) {
 	    for(i = 0; i < font_length; i++)
 	      new_font_path[i] = font_path[i];
 	    new_font_path[i] = fontdir;
@@ -283,7 +308,6 @@ char *fontdir;
 
 /* This sets up the window position, size, fonts, and gcs.
  */
-void
 set_up_window(width,height,size_hints,argv,argc)
 int *width, *height;
 XSizeHints *size_hints;
@@ -291,12 +315,12 @@ char *argv[];
 int argc;
 {
     *width = MAXCOLUMN*40;
-    *height = (MAXROW+4)*26;
-    win = XCreateSimpleWindow(display,RootWindow(display, screen),50,50,
-			      *width, *height, 4, black, white);
+    *height = (MAXROW+4)*20;
+    win = XCreateSimpleWindow(display,RootWindow(display, screen),0,0,
+			      *width, *height, 4, white, black);
     size_hints->flags = PPosition | PSize | PMinSize;
-    size_hints->x = 50;
-    size_hints->y = 50;
+    size_hints->x = 0;
+    size_hints->y = 0;
     size_hints->width = *width;
     size_hints->height = *height;
     size_hints->min_width = 300;
@@ -307,15 +331,18 @@ int argc;
 		 StructureNotifyMask | EnterWindowMask | LeaveWindowMask);
     load_font(&font_info, FONTNAME);
     get_GC(win, &gc, font_info);
+    XSetForeground(display, gc, Wheat.pixel);
+    XSetBackground(display, gc, black);
     load_font(&hexfont_info, HEXFONTNAME);
     get_GC(win, &hexgc, hexfont_info);
+    XSetForeground(display, hexgc, black);
+    XSetBackground(display, hexgc, DarkSlateGrey.pixel);
     XMapWindow(display, win);
     XFlush(display);
 }
 
 /* This sets up a gc
  */
-void
 get_GC(win, tgc, tfont_info)
 Window win;
 GC *tgc;
@@ -333,7 +360,7 @@ XFontStruct *tfont_info;
 
     *tgc = XCreateGC(display, win, valuemask, &values);
     XSetFont(display, *tgc, tfont_info->fid);
-    XSetForeground(display, *tgc, black);
+    XSetForeground(display, *tgc, white);
     XSetLineAttributes(display, *tgc, line_width, line_style, cap_style,
 		   join_style);
     XSetDashes(display, *tgc, dash_offset, dash_list, list_length);
@@ -341,7 +368,6 @@ XFontStruct *tfont_info;
 
 /* This loads a font
  */
-void
 load_font(tfont_info, font_name)
 XFontStruct **tfont_info;
 char *font_name;
@@ -354,7 +380,6 @@ char *font_name;
 
 /* This yells if the window is too small.
  */
-void
 TooSmall()
 {
     char *string1 = "Too Small";
@@ -370,7 +395,6 @@ TooSmall()
  *
  * This clears the window.
  */
-void
 clear_display()
 {
     XClearWindow(display,win);
@@ -380,7 +404,6 @@ clear_display()
  *
  * This displays the current score and rows completed.
  */
-void
 display_scores(score,rows)
 int *score, *rows;
 {
@@ -389,8 +412,8 @@ int *score, *rows;
 
     XSetFillStyle(display, gc, FillSolid);
     sprintf(scores,"Score: %6d", *score);
-    y_offset = 250;
-    x_offset = (MAXCOLUMN + 5) * 20;
+    y_offset = 160;
+    x_offset = (MAXCOLUMN + 1) * 20;
     XClearArea(display,win,x_offset,y_offset-20,MAXCOLUMN*20, 50, False);
     XDrawString(display, win, gc, x_offset, y_offset, scores,strlen(scores));
     sprintf(scores,"Rows: %3d", *rows);
@@ -403,7 +426,6 @@ int *score, *rows;
  *
  * This displays the help information.
  */
-void
 display_help()
 {
     int y_offset, x_offset, i;
@@ -429,9 +451,26 @@ display_help()
 
 
     XSetFillStyle(display, gc, FillSolid);
-    y_offset = 315;
-    x_offset = (MAXCOLUMN + 4) * 20;
+    y_offset = 200;
+    x_offset = (MAXCOLUMN + 1) * 20;
     for (i = 0; i < 19; i++)
+	XDrawString(display, win, gc, x_offset, y_offset+(i*17), message[i],
+		    strlen(message[i]));
+    XFlush(display);
+}
+
+display_help_score()
+{
+    int y_offset, x_offset, i;
+    static char *message[] = { "Keys:",
+				 "N,n - new game.",
+				 "G,g - show game.",
+				 "Q,q - quit game."};
+
+    XSetFillStyle(display, gc, FillSolid);
+    y_offset = 200;
+    x_offset = (MAXCOLUMN + 1) * 26;
+    for (i = 0; i < 4; i++)
 	XDrawString(display, win, gc, x_offset, y_offset+(i*17), message[i],
 		    strlen(message[i]));
     XFlush(display);
@@ -441,14 +480,13 @@ display_help()
  *
  * This displays the high score list.
  */
-void
 display_high_scores(high_scores)
 high_score_t high_scores[MAXHIGHSCORES];
 {
     int y_offset, i;
     static int x_offset[5] = {5,30,150,200,300};
     static char *header[] = {"#","Name","UID","Score","Rows"};
-    char message[40] = "";
+    char message[40];
 
     XClearWindow(display,win);
     XSetFillStyle(display, gc, FillSolid);
@@ -457,14 +495,15 @@ high_score_t high_scores[MAXHIGHSCORES];
       XDrawString(display, win, gc, x_offset[i], y_offset,
 		  header[i],strlen(header[i]));
     y_offset = 60;
-    for (i = 0; i < ((MAXHIGHSCORES > 40) ? 40 : MAXHIGHSCORES); i++) {
+    for (i = 0; i < ((MAXHIGHSCORES > 40) ? 30 : MAXHIGHSCORES); i++) {
 	itoa(i+1,message);
 	XDrawString(display, win, gc, x_offset[0], y_offset+(i*17),
 		    message,strlen(message));
 	XDrawString(display, win, gc, x_offset[1], y_offset+(i*17),
 		    high_scores[i].name,strlen(high_scores[i].name));
+	strncpy(message, high_scores[i].userid, 5);
 	XDrawString(display, win, gc, x_offset[2], y_offset+(i*17),
-		    high_scores[i].userid,strlen(high_scores[i].userid));
+		    message, strlen(message));
 	itoa(high_scores[i].score,message);
 	XDrawString(display, win, gc, x_offset[3], y_offset+(i*17),
 		    message,strlen(message));
@@ -479,7 +518,6 @@ high_score_t high_scores[MAXHIGHSCORES];
  *
  * This displays the next piece to be dropped.
  */
-void
 show_next_piece(npiece)
 piece_t *npiece;
 {
@@ -487,10 +525,10 @@ piece_t *npiece;
 
     tpiece.type = npiece->type;
     tpiece.rotation = npiece->rotation;
-    tpiece.row = 4;
+    tpiece.row = 1;
     tpiece.column = MAXCOLUMN+6;
-    XClearArea(display,win,(MAXCOLUMN+3)*20,0,200,230, False);
-    init_piece(&tpiece);
+    XClearArea(display,win,(MAXCOLUMN+3)*18,0,150,140, False);
+    init_piece(&tpiece, 0);
     XFlush(display);
 }
 
@@ -498,22 +536,131 @@ piece_t *npiece;
  *
  * This draws one hex at the specified row and column specified.
  */
-void
 draw_hex(row,column,fill,type)
 int row,column,fill,type;
 {
     int y_offset, x_offset;
     char hex[2];
 
-    x_offset = 20 + column * 20;
-    y_offset = 20 + row * 26 + (column & 1) * 13;
-    hex[0] = 'b' + type;
-    hex[1] = '\0';
+    x_offset = 20 + column * 16;
+    y_offset = 20 + row * 19 + (column & 1) * 9;
     if (fill) {
-	XSetForeground(display,hexgc,black);
+      strcpy(hex, "|");
+      switch (type) {
+      case 0:
+	XSetForeground(display, hexgc, Orange1.pixel);
+	XSetBackground(display, hexgc, Orange4.pixel);
+	break;
+      case 1:
+	XSetForeground(display, hexgc, Red1.pixel);
+	XSetBackground(display, hexgc, Red4.pixel);
+	break;
+      case 2:
+	XSetForeground(display, hexgc, Blue1.pixel);
+	XSetBackground(display, hexgc, Blue4.pixel);
+	break;
+      case 3:
+	XSetForeground(display, hexgc, Green1.pixel);
+	XSetBackground(display, hexgc, Green4.pixel);
+	break;
+      case 4:
+	XSetForeground(display, hexgc, Yellow1.pixel);
+	XSetBackground(display, hexgc, Yellow4.pixel);
+	break;
+      case 5:
+	XSetForeground(display, hexgc, Chocolate1.pixel);
+	XSetBackground(display, hexgc, Chocolate4.pixel);
+	break;
+      case 6:
+	XSetForeground(display, hexgc, Purple1.pixel);
+	XSetBackground(display, hexgc, Purple4.pixel);
+	break;
+      case 7:
+	XSetForeground(display, hexgc, SteelBlue1.pixel);
+	XSetBackground(display, hexgc, SteelBlue4.pixel);
+	break;
+      case 8:
+	XSetForeground(display, hexgc, Plum1.pixel);
+	XSetBackground(display, hexgc, Plum4.pixel);
+	break;
+      case 9:
+	XSetForeground(display, hexgc, Maroon1.pixel);
+	XSetBackground(display, hexgc, Maroon4.pixel);
+	break;
+      case 10:
+	XSetForeground(display, hexgc, Pink1.pixel);
+	XSetBackground(display, hexgc, Pink4.pixel);
+	break;
+      }	
     } else {
-	XSetForeground(display,hexgc,white);
-	strcpy(hex,"a");
+	XSetForeground(display,hexgc,DarkSlateGrey.pixel);
+	XSetBackground(display, hexgc, DarkSlateGrey.pixel);
+	strcpy(hex,"}");
+    }
+    XDrawString(display, win, hexgc, x_offset, y_offset, hex, strlen(hex));
+    XFlush(display);
+}
+
+draw_pos(column,fill,type)
+int column,fill,type;
+{
+    int y_offset, x_offset;
+    char hex[2];
+
+    x_offset = 20 + column * 16;
+    y_offset = 20 + (MAXROW + 2) * 19 + (column & 1) * 9;
+    if (fill) {
+      strcpy(hex, "|");
+      switch (type) {
+      case 0:
+	XSetForeground(display, hexgc, Orange1.pixel);
+	XSetBackground(display, hexgc, Orange4.pixel);
+	break;
+      case 1:
+	XSetForeground(display, hexgc, Red1.pixel);
+	XSetBackground(display, hexgc, Red4.pixel);
+	break;
+      case 2:
+	XSetForeground(display, hexgc, Blue1.pixel);
+	XSetBackground(display, hexgc, Blue4.pixel);
+	break;
+      case 3:
+	XSetForeground(display, hexgc, Green1.pixel);
+	XSetBackground(display, hexgc, Green4.pixel);
+	break;
+      case 4:
+	XSetForeground(display, hexgc, Yellow1.pixel);
+	XSetBackground(display, hexgc, Yellow4.pixel);
+	break;
+      case 5:
+	XSetForeground(display, hexgc, Chocolate1.pixel);
+	XSetBackground(display, hexgc, Chocolate4.pixel);
+	break;
+      case 6:
+	XSetForeground(display, hexgc, Purple1.pixel);
+	XSetBackground(display, hexgc, Purple4.pixel);
+	break;
+      case 7:
+	XSetForeground(display, hexgc, SteelBlue1.pixel);
+	XSetBackground(display, hexgc, SteelBlue4.pixel);
+	break;
+      case 8:
+	XSetForeground(display, hexgc, Plum1.pixel);
+	XSetBackground(display, hexgc, Plum4.pixel);
+	break;
+      case 9:
+	XSetForeground(display, hexgc, Maroon1.pixel);
+	XSetBackground(display, hexgc, Maroon4.pixel);
+	break;
+      case 10:
+	XSetForeground(display, hexgc, Pink1.pixel);
+	XSetBackground(display, hexgc, Pink4.pixel);
+	break;
+      }	
+    } else {
+	XSetForeground(display,hexgc,DarkSlateGrey.pixel);
+	XSetBackground(display, hexgc, DarkSlateGrey.pixel);
+	strcpy(hex,"}");
     }
     XDrawString(display, win, hexgc, x_offset, y_offset, hex, strlen(hex));
     XFlush(display);
@@ -523,7 +670,6 @@ int row,column,fill,type;
  *
  * This ends the game by closing everything down and exiting.
  */
-void
 end_game()
 {
 	XFreeGC (display, gc);

@@ -1,0 +1,98 @@
+#
+#
+#
+# Makefile.Linux to integrate package into source tree of S.u.S.E.-Linux.
+#
+# Copyright (c) 1995 S.u.S.E. Gmbh Fuerth, Germany.  All rights reserved.
+#
+#
+
+ScoreDir = /var/games
+SCORE    = $(DESTDIR)$(ScoreDir)
+FONT     = $(DESTDIR)$(FONTDIR)/misc
+MANPRE   = $(DESTDIR)$(MANDIR)/man1
+
+compile: 
+	@chmod -R +r *
+	@chmod    +x cxhextris xhextris
+	make compile -f Makefile.Linux -C cxhextris FONTDIR=$(FONTDIR) ScoreDir=$(ScoreDir)
+	make compile -f Makefile.Linux -C xhextris  FONTDIR=$(FONTDIR) ScoreDir=$(ScoreDir)
+	bdftopcf < xhextris.bdf | gzip -9cf > xhextris.pcf.gz
+	( cd cxhextris ; \
+	  gzip -c -9 xhextris.man > xhextris.1.gz )
+	 
+
+install: install.man
+	mkdir -p -m 0755 $(SCORE)
+	chmod 0755 $(SCORE)
+	touch $(SCORE)/cxhextris-scores
+	touch $(SCORE)/xhextris-scores
+	chmod 0666 $(SCORE)/cxhextris-scores
+	chmod 0666 $(SCORE)/xhextris-scores
+	mkdir -p -m 0755 $(FONT)
+	install -c -m 0444 xhextris.pcf.gz $(FONT)/xhextris.pcf.gz
+	make install -f Makefile.Linux DESTDIR=$(DESTDIR) FONTDIR=$(FONTDIR) -C cxhextris
+	make install -f Makefile.Linux DESTDIR=$(DESTDIR) FONTDIR=$(FONTDIR) -C xhextris
+	
+install.man:
+	( cd cxhextris ; \
+	  mkdir -p -m 0755 $(MANPRE) ; \
+	  install -c -m 0444 xhextris.1.gz $(MANPRE)/xhextris.1.gz ) 
+	( cd $(MANPRE) ; \
+	  ln -sf xhextris.1.gz cxhextris.1.gz )
+
+clean:
+	make clean -f Makefile.Linux -C cxhextris
+	make clean -f Makefile.Linux -C xhextris
+	rm -rf cxhextris/xhextris.1.gz
+	rm -rf xhextris.pcf.Z
+
+#
+#
+#
+# Makefile.Linux to integrate package into source tree of S.u.S.E.-Linux.
+#
+# Copyright (c) 1995 S.u.S.E. Gmbh Fuerth, Germany.  All rights reserved.
+#
+#
+
+ScoreDir = /var/games
+SCORE    = $(DESTDIR)$(ScoreDir)
+FONT     = $(DESTDIR)$(FONTDIR)/misc
+MANPRE   = $(DESTDIR)$(MANDIR)/man1
+
+compile: 
+	@chmod -R +r *
+	@chmod    +x cxhextris xhextris
+	make compile -f Makefile.Linux -C cxhextris FONTDIR=$(FONTDIR) ScoreDir=$(ScoreDir)
+	make compile -f Makefile.Linux -C xhextris  FONTDIR=$(FONTDIR) ScoreDir=$(ScoreDir)
+	bdftopcf < xhextris.bdf | gzip -9cf > xhextris.pcf.gz
+	( cd cxhextris ; \
+	  gzip -c -9 xhextris.man > xhextris.1.gz )
+	 
+
+install: install.man
+	mkdir -p -m 0755 $(SCORE)
+	chmod 0755 $(SCORE)
+	touch $(SCORE)/cxhextris-scores
+	touch $(SCORE)/xhextris-scores
+	chmod 0666 $(SCORE)/cxhextris-scores
+	chmod 0666 $(SCORE)/xhextris-scores
+	mkdir -p -m 0755 $(FONT)
+	install -c -m 0444 xhextris.pcf.gz $(FONT)/xhextris.pcf.gz
+	make install -f Makefile.Linux DESTDIR=$(DESTDIR) FONTDIR=$(FONTDIR) -C cxhextris
+	make install -f Makefile.Linux DESTDIR=$(DESTDIR) FONTDIR=$(FONTDIR) -C xhextris
+	
+install.man:
+	( cd cxhextris ; \
+	  mkdir -p -m 0755 $(MANPRE) ; \
+	  install -c -m 0444 xhextris.1.gz $(MANPRE)/xhextris.1.gz ) 
+	( cd $(MANPRE) ; \
+	  ln -sf xhextris.1.gz cxhextris.1.gz )
+
+clean:
+	make clean -f Makefile.Linux -C cxhextris
+	make clean -f Makefile.Linux -C xhextris
+	rm -rf cxhextris/xhextris.1.gz
+	rm -rf xhextris.pcf.Z
+

@@ -1,13 +1,19 @@
 .TH "XHEXTRIS" 1 "06 April 1993"
 .SH NAME
-xhextris \- X Window hexagonal block dropping game
+xhextris, cxhextris \- X Window hexagonal block dropping game
 .SH SYNOPSIS
-.B xtetris
+.B xhextris
+[
+.B "X options"
+],
+.B cxhextris
 [
 .B "X options"
 ]
 .SH DESCRIPTION
 .I Xhextris
+or the colored version
+.I cxhextris
 is a game involving dropping hexagonal blocks similar to xtetris.  You
 can use the keyboard: j for moving to the left, l for moving to the
 right, k to rotate clockwise, i to rotate counter-clockwise and space

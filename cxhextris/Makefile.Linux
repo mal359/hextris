@@ -1,0 +1,20 @@
+#
+#
+#
+# Makefile.Linux to integrate package into source tree of S.u.S.E.-Linux.
+#
+# Copyright (c) 1995 S.u.S.E. Gmbh Fuerth, Germany.  All rights reserved.
+#
+#
+
+
+compile: 
+	xmkmf -a
+	make cxhextris FONTDIR=$(FONTDIR)
+
+install:
+	make install
+
+clean:
+	make clean
+

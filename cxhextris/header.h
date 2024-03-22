@@ -21,9 +21,15 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/socket.h>
+
 /* The maximum rows in the game.
  */
-#define MAXROW 26
+#define MAXROW 27
 /* The maximum columns in the game.
  */
 #define MAXCOLUMN 13
@@ -47,10 +53,10 @@
 #define NUMBEROFPIECES 10
 /* The name of the xhextris font. DON'T CHANGE!!!
  */
-#define HEXFONTNAME "hex20"
+#define HEXFONTNAME "xhextris"
 /* The directory where the text font is.
  */
-#define FONTDIR "/usr/lib/X11/fonts/misc/"
+#define FONTDIR "/usr/share/fonts/misc/"
 /* The text font being used.
  */
 #define FONTNAME "-misc-fixed-bold-r-normal--13-120-75-75-c-80-iso8859-1" /*8x13B"*/
@@ -99,6 +105,7 @@ typedef struct high_score_s
  * hex that is up to its neighbors in its row, or down to them. One row in the
  * game moves up and down, from left to right.
  */
+#ifdef SHAPE_REQUIRED
 static int shape[NUMBEROFPIECES*6][16]
   = {{0,0,-1,0,1,-1,1,1,-1,0,0,-1,0,1,0,0},       /* 00 */
        {0,0,0,-1,0,1,1,0,-1,-1,-1,1,1,0,0,0},     /* 01 */
@@ -160,6 +167,7 @@ static int shape[NUMBEROFPIECES*6][16]
        {1,0,0,0,0,1,-1,1,1,0,0,0,-1,1,-2,1},      /* 93 */
        {1,1,0,0,-1,0,-1,-1,0,1,0,0,-1,0,-2,-1},   /* 94 */
        {0,-2,0,-1,0,0,0,1,0,-2,-1,-1,0,0,-1,1}};  /* 95 */
+#endif
 
 #ifdef LOG
 #define LOGHOST "waddington.andrew.cmu.edu"
@@ -167,3 +175,26 @@ char log_message[80];
 #endif
 
 extern int score_cardinal;
+
+extern void init_piece(piece_t *, int);
+extern void redraw_position();
+extern int  update_drop(position_t [MAXROW][MAXCOLUMN], piece_t *, piece_t *, int *, int *);
+extern int  is_high_score(char [], char [], int, int, high_score_t []);
+extern void do_choice(char *, position_t [MAXROW][MAXCOLUMN], piece_t *, piece_t *, int *, int *, int *, int *, high_score_t []);
+extern void redraw_game(position_t [MAXROW][MAXCOLUMN], piece_t *, piece_t *, int *, int*, int, high_score_t []);
+extern void itoa(int, char*);
+extern void new_piece(piece_t*, piece_t*);
+extern int  read_high_scores(high_score_t []);
+extern int  write_high_scores(high_score_t [], char*);
+extern void set_up_display(int);
+extern void set_font_path(char*);
+extern void TooSmall();
+extern void clear_display();
+extern void display_scores(int*, int*);
+extern void display_help();
+extern void display_help_score();
+extern void display_high_scores(high_score_t []);
+extern void show_next_piece(piece_t*);
+extern void draw_hex(int, int, int, int);
+extern void draw_pos(int column, int fill, int type);
+extern void end_game();

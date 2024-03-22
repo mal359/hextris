@@ -24,16 +24,17 @@
 #include <stdio.h>
 #include "header.h"
 
+int
 main()
 {
     high_score_t high_scores[MAXHIGHSCORES];
     int i;
 
     read_high_scores(high_scores);
-    printf("%-3s %-40s %-5s %-10s %-3s\n", "#", "Name", "UID", "Score",
-"Row");
+    printf("%-3s %-40s %-5s %-10s %-3s\n", "#", "Name", "UID", "Score", "Row");
     for (i = 0; i < MAXHIGHSCORES; i++)
       printf("%3d %-40s %-5s %10d %3d\n", i+1, high_scores[i].name,
 	     high_scores[i].userid, high_scores[i].score,
 	     high_scores[i].rows);
+    return 0;
 }

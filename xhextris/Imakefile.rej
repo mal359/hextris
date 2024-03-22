@@ -1,0 +1,144 @@
+*** Imakefile	Tue Apr  6 22:24:15 1993
+--- Imakefile	Fri Apr 27 10:46:27 1990
+***************
+*** 1,19 ****
+!        ScoreDir = $(LIBDIR)
+!       ScoreFile = xhextris-scores
+!         DEFINES = -DHIGHSCOREFILE=\"$(ScoreDir)/$(ScoreFile)\" -DHEXFONTDIR=\"$(FONTDIR)/misc\"
+!         HEADERS = header.h
+!            SRCS = hextris.c xio.c stdsys.c
+!            OBJS = hextris.o xio.o stdsys.o
+! LOCAL_LIBRARIES = $(XLIB)
+!         DEPLIBS = $(DEPXLIB) 
+! 
+! ComplexProgramTarget(xhextris)
+! 
+! hex20.pcf: hex20.bdf
+! 	bdftopcf < hex20.bdf > hex20.pcf
+! 
+! install.font: hex20.pcf
+! 	install -m 444 hex20.pcf $(FONTDIR)/misc
+! 	$(MKFONTDIR) $(FONTDIR)/misc
+  
+! InstallMultipleFlags($(ScoreFile),$(ScoreDir),-m 666)
+--- 1,120 ----
+! # 
+! #  hextris Copyright 1990 David Markley, dm3e@+andrew.cmu.edu, dam@cs.cmu.edu
+! #
+! #  Permission to use, copy, modify, and distribute, this software and its
+! #  documentation for any purpose is hereby granted without fee, provided that
+! #  the above copyright notice appear in all copies and that both that
+! #  copyright notice and this permission notice appear in supporting
+! #  documentation, and that the name of the copyright holders be used in
+! #  advertising or publicity pertaining to distribution of the software with
+! #  specific, written prior permission, and that no fee is charged for further
+! #  distribution of this software, or any modifications thereof.  The copyright
+! #  holder make no representations about the suitability of this software for
+! #  any purpose.  It is provided "as is" without express or implied warranty.
+! # 
+! #  THE COPYRIGHT HOLDER DISCLAIM ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+! #  INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
+! #  EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+! #  CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+! #  DATA, PROFITS, QPA OR GPA, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE 
+! #  OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+! #  PERFORMANCE OF THIS SOFTWARE.
+! # 
+  
+! CC=cc
+! #ifdef AFS
+! INCLDS=-I/usr/andrew/include -I/usr/local/include
+! LIBS= -L/usr/contributed/lib -L/usr/local/lib -L/usr/andrew/lib
+! LOGGING = -lloguse
+! #ifdef GAMES
+! CFLAGS= -DAFS -DLOG -O
+! AUTHLIBS+{sun4_40}= /usr/local/lib/afs/libkauth.a \
+! 	/usr/local/lib/libr.a /usr/local/lib/liblwp.a \
+! 	/usr/local/lib/afs/libsys.a /usr/local/lib/libscrypt.a
+! AUTHLIBS+{mac2_51}= /usr/local/lib/afs/libkauth.a \
+! 	/usr/local/lib/libr.a /usr/local/lib/liblwp.a \
+! 	/usr/local/lib/afs/libsys.a /usr/local/lib/libscrypt.a
+! HEXFONTDIR=/afs/andrew/usr0/games/fonts/x11
+! HIGHSCOREDIR=/afs/andrew/usr0/games/lib/xhextris
+! HIGHSCOREEXT=xhextris.scores
+! #else
+! CFLAGS= -DLOG -O
+! CFLAGS+{sun4_40}= -DLOG -Dsun4_40 -g
+! CFLAGS+{mac2_51}= -DLOG -Dmac2_51 -g
+! AUTHLIBS=
+! HEXFONTDIR=/afs/andrew/usr10/dm3e/.fonts/X11
+! HIGHSCOREDIR=/afs/andrew/usr10/dm3e/stuff/games
+! HIGHSCOREEXT=xhextris.scores
+! BIN=/afs/andrew/usr10/dm3e/bin
+! SECURE=${BIN}
+! UNPRIV=${BIN}
+! #endif
+! #else
+! CFLAGS= -O
+! # Make sure INCLDS has the correct area(s) for the needed #includes
+! INCLDS= -I.
+! # Make sure LIBS has the correct area(s) for the needed libraries (-lX11).
+! LIBS= -L.
+! LOGGING=
+! 
+! # Make sure to change these same three variables in header.h
+! 
+! # Make this point to where you want the xhextris font placed.
+! HEXFONTDIR=./
+! # Make this point to where you want the high score file placed.
+! # Remember: This directory must be writable be another user, if you
+! # plan on keeping a common high score file.
+! HIGHSCOREDIR=./
+! # Make this the name of the high score file.
+! HIGHSCOREEXT=xhextris.scores
+! 
+! # This is where you want the binaries to be placed.
+! # Don't bother with the SECURE and UNPRIV, unless you have a setup where
+! # the game has to switch tokens to write the high scores. Send me mail if you
+! # do. The games maintainers at CMU have a good setup for this.
+! BIN=/tmp
+! SECURE=${BIN}
+! UNPRIV=${BIN}
+! #endif
+! DEFS= -DHEXFONTDIR="\"${HEXFONTDIR}/\"" -DHIGHSCOREDIR="\"${HIGHSCOREDIR}/\"" \
+! 	-DHIGHSCOREEXT="\"${HIGHSCOREEXT}\""
+! .c.o:
+! 	${CC} ${CFLAGS} ${DEFS} ${INCLDS} -c $*.c
+! 
+! all: installx installtop
+! 	bdftosnf < hex10.bdf > ${HEXFONTDIR}/xhextris.snf
+! 	mkfontdir ${HEXFONTDIR}
+! 	echo "foo" > ${HIGHSCOREDIR}/${HIGHSCOREEXT}
+! 
+! xhextris : stdsys.o xio.o hextris.o header.h
+! 	${CC} ${CFLAGS} ${DEFS} -o xhextris stdsys.o xio.o hextris.o \
+! 	${INCLDS} ${AUTHLIBS} ${LIBS} -lX11 ${LOGGING}
+! 
+! # This is only usefull if you use the Andrew Window Manager
+! wmhextris: stdsys.o wmio.o hextris.o header.h
+! 	${CC} ${CFLAGS} ${DEFS} -o wmhextris stdsys.o wmio.o hextris.o \
+! 	${INCLDS} ${AUTHLIBS} ${LIBS} -lwm ${LOGGING}
+! 
+! tophextris: stdsys.o tophextris.o header.h
+! 	${CC} -O ${DEFS} ${INCLDS} -o tophextris stdsys.o tophextris.o \
+! 	${AUTHLIBS} ${LIBS}
+! 
+! installx: xhextris
+! 	install -s xhextris ${SECURE}/xhextris
+! 
+! # This is only usefull if you use the Andrew Window Manager
+! installwm: wmhextris
+! 	install -s wmhextris ${SECURE}/hextris
+! 
+! installtop: tophextris
+! 	install -s tophextris ${UNPRIV}/tophextris
+! 
+! clean:
+! 	-	rm *.o xhextris wmhextris hextris
+! 
+! 
+! xio.o: header.h
+! hextris.o: header.h
+! stdsys.o: header.h 
+! tophextris.o: header.h
+! 

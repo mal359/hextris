@@ -32,6 +32,7 @@
  *
  * This is a standard string reverse routine.
  */
+void
 reverse(s)
 char *s;
 {
@@ -48,6 +49,7 @@ char *s;
  *
  * This is a standard integer to string converter.
  */
+void
 itoa(n,s)
 int n;
 char *s;
@@ -69,6 +71,7 @@ char *s;
 /* This randomly selects the next piece. It also selects the current
  * piece, if it has not yet been set (rotation = -1).
  */
+void
 new_piece(npiece,piece)
 piece_t *npiece,*piece;
 {
@@ -132,6 +135,7 @@ static void put_score_file(void)
 
 /* This reads in the high score file.
  */
+int
 read_high_scores(high_scores)
 high_score_t high_scores[MAXHIGHSCORES];
 {
@@ -168,6 +172,7 @@ high_score_t high_scores[MAXHIGHSCORES];
 
 /* This writes the high score file.
  */
+int
 write_high_scores(high_scores,uniqueid)
 high_score_t high_scores[MAXHIGHSCORES];
 char *uniqueid;
